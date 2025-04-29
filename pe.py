@@ -72,6 +72,8 @@ else:
 
 # 4. Cálculo del Punto de Equilibrio
 st.header("4️⃣ Punto de Equilibrio")
+st.markdown("📌 **¿Qué es el punto de equilibrio?** Es el nivel mínimo de ventas que necesitas para cubrir todos tus costos. Si vendes menos, pierdes; si vendes más, empiezas a ganar. Saber esto te da claridad para tomar decisiones con rumbo.")
+
 if precios_validos and costos_validos:
     precio_promedio = sum(precios_validos) / len(precios_validos)
     costo_variable_promedio = sum(costos_validos) / len(costos_validos)
