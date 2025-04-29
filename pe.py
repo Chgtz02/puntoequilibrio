@@ -47,9 +47,13 @@ for i in range(1, 11):
     precios.append(precio)
     costos.append(costo)
 
+# Filtrar valores válidos
+precios_validos = [p for p in precios if p > 0]
+costos_validos = [c for c in costos if c > 0 and costos.index(c) < len(precios) and precios[costos.index(c)] > 0]
+
 margenes = []
-for p, c in zip(precios, costos):
-    if p > 0 and p > c:
+for p, c in zip(precios_validos, costos_validos):
+    if p > c:
         margen = ((p - c) / p) * 100
         margenes.append(margen)
 
@@ -68,9 +72,9 @@ else:
 
 # 4. Cálculo del Punto de Equilibrio
 st.header("4️⃣ Punto de Equilibrio")
-if precios and costos:
-    precio_promedio = sum(precios) / len([p for p in precios if p > 0])
-    costo_variable_promedio = sum(costos) / len([c for c in costos if c > 0])
+if precios_validos and costos_validos:
+    precio_promedio = sum(precios_validos) / len(precios_validos)
+    costo_variable_promedio = sum(costos_validos) / len(costos_validos)
     utilidad_unitaria = precio_promedio - costo_variable_promedio
 
     if utilidad_unitaria > 0:
@@ -85,3 +89,5 @@ if precios and costos:
             st.success("🟢 Punto de equilibrio saludable. Estás en buen camino.")
     else:
         st.error("Tu utilidad por unidad es cero o negativa. No es posible calcular el punto de equilibrio.")
+else:
+    st.info("Ingresa al menos un precio y costo válido para calcular el punto de equilibrio.")
