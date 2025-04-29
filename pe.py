@@ -1,67 +1,87 @@
 import streamlit as st
 import pandas as pd
-from io import StringIO
 
 st.set_page_config(page_title="Calculadora de Punto de Equilibrio", layout="centered")
-
 st.title("📊 Calculadora de Punto de Equilibrio")
-st.markdown("Esta herramienta te ayuda a calcular cuántas ventas necesitas para cubrir tus gastos mensuales y no perder dinero.")
 
-st.header("1️⃣ Costos Fijos")
-st.markdown("**¿Qué son?** Gastos que tienes cada mes sin importar cuánto vendas. Ej: renta, luz, sueldos, etc.")
-costos_fijos = st.number_input("Ingresa la suma total de tus costos fijos mensuales (MXN):", min_value=0.0, format="%.2f")
+st.markdown("Esta herramienta te ayudará a entender los números de tu negocio paso a paso. Vamos a calcular tu **punto de equilibrio**, evaluando tus costos y márgenes de utilidad.")
 
-st.header("2️⃣ Costos Variables")
-st.markdown("**¿Qué son?** Gastos que cambian según lo que produces o vendes. Ej: materia prima, empaques, comisiones.")
+# 1. Costos Fijos Mensuales
+st.header("1️⃣ Costos Fijos Mensuales")
+st.markdown("**¿Qué son?** Son los gastos que debes cubrir mes a mes sin importar cuánto vendas: renta, servicios, sueldos, etc.")
 
-producto_unico = st.radio("¿Vendes un solo producto o varios?", ("Un solo producto", "Varios productos"))
+costos_fijos = []
+for i in range(1, 11):
+    col1, col2 = st.columns([3, 1])
+    concepto = col1.text_input(f"Concepto fijo #{i}", key=f"cf_concepto_{i}")
+    cantidad = col2.number_input(f"Cantidad", min_value=0.0, step=10.0, format="%.2f", key=f"cf_cantidad_{i}")
+    costos_fijos.append(cantidad)
 
-if producto_unico == "Un solo producto":
-    precio_venta = st.number_input("Precio de venta por unidad (MXN):", min_value=0.01, format="%.2f")
-    costo_unitario = st.number_input("Costo por unidad del producto (MXN):", min_value=0.0, max_value=precio_venta, format="%.2f")
-    
-    if precio_venta > 0 and costo_unitario >= 0:
-        margen_utilidad = ((precio_venta - costo_unitario) / precio_venta) * 100
-        utilidad_unitaria = precio_venta - costo_unitario
-        
-        st.markdown(f"🧮 **Margen de utilidad:** {margen_utilidad:.2f}%")
-        st.markdown(f"💰 **Utilidad por unidad vendida:** ${utilidad_unitaria:.2f}")
-        
-        if utilidad_unitaria > 0:
-            punto_equilibrio = costos_fijos / utilidad_unitaria
-            st.success(f"🔁 Necesitas vender **{punto_equilibrio:.0f} unidades** al mes para alcanzar tu punto de equilibrio.")
-        else:
-            st.error("Tu utilidad es cero o negativa. Revisa tus precios o costos.")
-        
+total_costos_fijos = sum(costos_fijos)
+st.success(f"💰 Total de costos fijos: ${total_costos_fijos:.2f}")
+
+# 2. Costos Variables Mensuales
+st.header("2️⃣ Costos Variables Mensuales")
+st.markdown("**¿Qué son?** Son los costos que cambian dependiendo de cuánto produzcas o vendas. Ej: materia prima, empaques, comisiones.")
+
+costos_variables = []
+for i in range(1, 11):
+    col1, col2 = st.columns([3, 1])
+    concepto = col1.text_input(f"Concepto variable #{i}", key=f"cv_concepto_{i}")
+    cantidad = col2.number_input(f"Cantidad", min_value=0.0, step=10.0, format="%.2f", key=f"cv_cantidad_{i}")
+    costos_variables.append(cantidad)
+
+total_costos_variables = sum(costos_variables)
+st.success(f"📦 Total de costos variables: ${total_costos_variables:.2f}")
+
+# 3. Margen de Utilidad
+st.header("3️⃣ Margen de Utilidad")
+st.markdown("**¿Qué es?** Es la ganancia que obtienes por cada venta después de restar el costo del producto.")
+
+precios = []
+costos = []
+for i in range(1, 11):
+    col1, col2 = st.columns(2)
+    precio = col1.number_input(f"Precio de venta #{i}", min_value=0.0, step=1.0, format="%.2f", key=f"precio_{i}")
+    costo = col2.number_input(f"Costo del producto #{i}", min_value=0.0, step=1.0, format="%.2f", key=f"costo_{i}")
+    precios.append(precio)
+    costos.append(costo)
+
+margenes = []
+for p, c in zip(precios, costos):
+    if p > 0 and p > c:
+        margen = ((p - c) / p) * 100
+        margenes.append(margen)
+
+if margenes:
+    margen_promedio = sum(margenes) / len(margenes)
+    st.info(f"📈 Margen de utilidad promedio: {margen_promedio:.2f}%")
+
+    if margen_promedio < 20:
+        st.error("🔴 Margen bajo. Considera revisar tus precios o costos.")
+    elif margen_promedio < 40:
+        st.warning("🟡 Margen aceptable. Hay oportunidad de mejora.")
+    else:
+        st.success("🟢 Buen margen. Tu negocio está sano en rentabilidad.")
 else:
-    st.markdown("Ingresa los datos de tus productos abajo:")
-    st.markdown("**Ejemplo:** Producto A, Precio 100, Costo 60")
-    data_input = st.text_area("Pega tus datos en este formato:\nNombre,Precio,Costo", height=150)
+    st.warning("Ingresa precios y costos válidos para calcular el margen.")
 
-    if data_input:
-        try:
-            df = pd.read_csv(StringIO(data_input), names=["Nombre", "Precio", "Costo"])
-            df["Precio"] = df["Precio"].astype(float)
-            df["Costo"] = df["Costo"].astype(float)
-            df["Utilidad"] = df["Precio"] - df["Costo"]
-            df["Margen %"] = ((df["Utilidad"]) / df["Precio"]) * 100
+# 4. Cálculo del Punto de Equilibrio
+st.header("4️⃣ Punto de Equilibrio")
+if precios and costos:
+    precio_promedio = sum(precios) / len([p for p in precios if p > 0])
+    costo_variable_promedio = sum(costos) / len([c for c in costos if c > 0])
+    utilidad_unitaria = precio_promedio - costo_variable_promedio
 
-            precio_promedio = df["Precio"].mean()
-            costo_promedio = df["Costo"].mean()
-            utilidad_promedio = precio_promedio - costo_promedio
-            margen_promedio = (utilidad_promedio / precio_promedio) * 100 if precio_promedio > 0 else 0
-
-            st.dataframe(df)
-
-            st.markdown(f"📊 **Precio promedio:** ${precio_promedio:.2f}")
-            st.markdown(f"📉 **Costo promedio:** ${costo_promedio:.2f}")
-            st.markdown(f"🧮 **Margen de utilidad promedio:** {margen_promedio:.2f}%")
-            st.markdown(f"💰 **Utilidad promedio por venta:** ${utilidad_promedio:.2f}")
-
-            if utilidad_promedio > 0:
-                punto_equilibrio = costos_fijos / utilidad_promedio
-                st.success(f"🔁 Necesitas vender **{punto_equilibrio:.0f} unidades promedio** al mes para alcanzar tu punto de equilibrio.")
-            else:
-                st.error("La utilidad promedio es cero o negativa. Revisa tus precios o costos.")
-        except Exception as e:
-            st.error("Error al procesar los datos. Asegúrate de que estén en el formato correcto.")
+    if utilidad_unitaria > 0:
+        punto_equilibrio = total_costos_fijos / utilidad_unitaria
+        st.success(f"🔁 Punto de Equilibrio: Necesitas vender **{punto_equilibrio:.0f} unidades promedio** al mes para cubrir tus costos.")
+        
+        if punto_equilibrio > 100:
+            st.error("🔴 Punto de equilibrio alto. Revisa tus márgenes o gastos fijos.")
+        elif punto_equilibrio > 50:
+            st.warning("🟡 Punto de equilibrio moderado. Hay margen de optimización.")
+        else:
+            st.success("🟢 Punto de equilibrio saludable. Estás en buen camino.")
+    else:
+        st.error("Tu utilidad por unidad es cero o negativa. No es posible calcular el punto de equilibrio.")
