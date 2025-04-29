@@ -3,7 +3,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Calculadora de Punto de Equilibrio", layout="centered")
 st.title("📊 Calculadora de Punto de Equilibrio")
-
+st.caption("Desarrollado con ❤️ por Christian Gutiérrez")
 st.markdown("Esta herramienta te ayudará a entender los números de tu negocio paso a paso. Vamos a calcular tu **punto de equilibrio**, evaluando tus costos y márgenes de utilidad.")
 
 # 1. Costos Fijos Mensuales
